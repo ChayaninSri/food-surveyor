@@ -26,6 +26,7 @@
             object-fit: cover;
             border-radius: 8px;
             background-color: #f0f0f0; /* สีพื้นหลังเวลาโหลด */
+            cursor: pointer; /* แสดงว่าเป็นปุ่มกดได้ */
         }
         .loading-overlay {
             position: fixed;
@@ -487,13 +488,25 @@
             let displaySrc = src;
             if (isUrl && src.includes('drive.google.com')) {
                 // พยายามดึง File ID ออกมา
-                // รูปแบบปกติ: https://drive.google.com/file/d/FILE_ID/view...
-                // รูปแบบเป้าหมาย: https://drive.google.com/thumbnail?id=FILE_ID&sz=w800
-                const match = src.match(/\/d\/(.+?)\/|id=(.+?)(&|$)/);
-                if (match) {
-                    const id = match[1] || match[2];
-                    // ใช้ thumbnail endpoint พร้อมขนาด w800 ซึ่งเสถียรกว่า uc?export=view
-                    displaySrc = `https://drive.google.com/thumbnail?id=${id}&sz=w800`;
+                // รองรับหลายรูปแบบ:
+                // 1. https://drive.google.com/file/d/FILE_ID/view
+                // 2. https://drive.google.com/open?id=FILE_ID
+                // 3. https://drive.google.com/uc?id=FILE_ID
+                
+                let id = null;
+                const match1 = src.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match1) {
+                    id = match1[1];
+                } else {
+                    const match2 = src.match(/id=([a-zA-Z0-9_-]+)/);
+                    if (match2) {
+                        id = match2[1];
+                    }
+                }
+
+                if (id) {
+                    // เปลี่ยนไปใช้ lh3.googleusercontent.com/d/ID ซึ่งมักจะแสดงผลได้เสถียรกว่าสำหรับการฝังรูป
+                    displaySrc = `https://lh3.googleusercontent.com/d/${id}`;
                 }
             }
 
@@ -502,10 +515,14 @@
             const borderClass = isUrl ? 'border-blue-200' : 'border-gray-200';
 
             // เพิ่ม referrerpolicy="no-referrer" เพื่อลดปัญหาการ block
+            // เพิ่ม onclick window.open เพื่อให้กดดูรูปต้นฉบับได้
             div.innerHTML = `
                 <img src="${displaySrc}" class="image-preview border-2 ${borderClass}" 
                      referrerpolicy="no-referrer"
-                     onerror="this.src='https://via.placeholder.com/150?text=Error';this.onerror=null;">
+                     loading="lazy"
+                     onclick="window.open('${src}', '_blank')"
+                     title="คลิกเพื่อดูรูปต้นฉบับ"
+                     onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=No+Image';">
                 <button type="button" onclick="removeImage(this, '${src}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-10">
                     <i class="fa-solid fa-times"></i>
                 </button>
