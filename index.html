@@ -25,6 +25,7 @@
             height: 100px;
             object-fit: cover;
             border-radius: 8px;
+            background-color: #eee; /* Placeholder color */
         }
         .loading-overlay {
             position: fixed;
@@ -224,7 +225,7 @@
     <script>
         // *** CONFIGURATION ***
         // URL ของ Apps Script เดิมของคุณ (อย่าลืม Deploy ใหม่ถ้ามีการแก้ Code หลังบ้าน)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBdAPL5wVRavuLPfJgmSmmr6yVKLN9R_lCABoUjVObxr5Xm9YDIRoPHm4zikIt4tfq/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysJ4ZgDXsVcBQt2FVCTjCcxbFV0kBJs8tXQhvqqPpvO3T0Nw3jfrErmQxM60hdwG2U/exec';
 
         // --- GLOBAL VARIABLES ---
         let allVenues = []; 
@@ -242,7 +243,6 @@
             loading.style.display = 'flex';
 
             // *** FIX CACHING ISSUE ***
-            // เพิ่ม ?t=เวลาปัจจุบัน เพื่อบังคับให้ Browser โหลดข้อมูลใหม่ ไม่ใช้ Cache
             const urlWithCacheBuster = SCRIPT_URL + "?t=" + new Date().getTime();
 
             fetch(urlWithCacheBuster)
@@ -479,15 +479,31 @@
             }
         }
 
+        // *** FIX: Google Drive Image Display ***
         function addImagePreview(src, isUrl) {
             const container = document.getElementById('imagePreviewContainer');
+            
+            // Logic: ถ้าเป็น URL ของ Google Drive เราต้องแปลงลิงก์ให้เป็นแบบ Direct Link
+            let displaySrc = src;
+            if (isUrl && src.includes('drive.google.com')) {
+                // พยายามดึง File ID ออกมา
+                // รูปแบบปกติ: https://drive.google.com/file/d/FILE_ID/view...
+                // รูปแบบเป้าหมาย: https://drive.google.com/uc?export=view&id=FILE_ID
+                const match = src.match(/\/d\/(.+?)\/|id=(.+?)(&|$)/);
+                if (match) {
+                    const id = match[1] || match[2];
+                    // ใช้ลิงก์แบบ uc?export=view หรือ lh3.googleusercontent.com เพื่อแสดงรูป
+                    displaySrc = `https://drive.google.com/uc?export=view&id=${id}`;
+                }
+            }
+
             const div = document.createElement('div');
             div.className = 'image-preview-wrapper';
-            
             const borderClass = isUrl ? 'border-blue-200' : 'border-gray-200';
 
             div.innerHTML = `
-                <img src="${src}" class="image-preview border-2 ${borderClass}">
+                <img src="${displaySrc}" class="image-preview border-2 ${borderClass}" 
+                     onerror="this.src='https://via.placeholder.com/150?text=Error';this.onerror=null;">
                 <button type="button" onclick="removeImage(this, '${src}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-10">
                     <i class="fa-solid fa-times"></i>
                 </button>
