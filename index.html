@@ -25,7 +25,7 @@
             height: 100px;
             object-fit: cover;
             border-radius: 8px;
-            background-color: #eee; /* Placeholder color */
+            background-color: #f0f0f0; /* สีพื้นหลังเวลาโหลด */
         }
         .loading-overlay {
             position: fixed;
@@ -488,12 +488,12 @@
             if (isUrl && src.includes('drive.google.com')) {
                 // พยายามดึง File ID ออกมา
                 // รูปแบบปกติ: https://drive.google.com/file/d/FILE_ID/view...
-                // รูปแบบเป้าหมาย: https://drive.google.com/uc?export=view&id=FILE_ID
+                // รูปแบบเป้าหมาย: https://drive.google.com/thumbnail?id=FILE_ID&sz=w800
                 const match = src.match(/\/d\/(.+?)\/|id=(.+?)(&|$)/);
                 if (match) {
                     const id = match[1] || match[2];
-                    // ใช้ลิงก์แบบ uc?export=view หรือ lh3.googleusercontent.com เพื่อแสดงรูป
-                    displaySrc = `https://drive.google.com/uc?export=view&id=${id}`;
+                    // ใช้ thumbnail endpoint พร้อมขนาด w800 ซึ่งเสถียรกว่า uc?export=view
+                    displaySrc = `https://drive.google.com/thumbnail?id=${id}&sz=w800`;
                 }
             }
 
@@ -501,8 +501,10 @@
             div.className = 'image-preview-wrapper';
             const borderClass = isUrl ? 'border-blue-200' : 'border-gray-200';
 
+            // เพิ่ม referrerpolicy="no-referrer" เพื่อลดปัญหาการ block
             div.innerHTML = `
                 <img src="${displaySrc}" class="image-preview border-2 ${borderClass}" 
+                     referrerpolicy="no-referrer"
                      onerror="this.src='https://via.placeholder.com/150?text=Error';this.onerror=null;">
                 <button type="button" onclick="removeImage(this, '${src}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-10">
                     <i class="fa-solid fa-times"></i>
@@ -579,4 +581,3 @@
     </script>
 </body>
 </html>
-
