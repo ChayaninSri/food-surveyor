@@ -401,9 +401,9 @@
         function resetGPSUI() {
             const gpsInput = document.getElementById('gpsInput');
             gpsInput.value = '';
-            gpsInput.readOnly = true;
+            gpsInput.readOnly = false;
             gpsInput.classList.remove('bg-white', 'text-gray-800', 'text-red-600', 'border-red-300');
-            gpsInput.classList.add('bg-gray-100', 'text-gray-600');
+            gpsInput.classList.add('bg-white', 'text-gray-800');
             document.getElementById('gpsHelpText').classList.add('hidden-page');
         }
 
@@ -417,7 +417,7 @@
             const gpsInput = document.getElementById('gpsInput');
             
             gpsInput.value = "กำลังระบุตำแหน่ง...";
-            gpsInput.readOnly = true;
+            //gpsInput.readOnly = true;
             document.getElementById('gpsHelpText').classList.add('hidden-page');
 
             if (!navigator.geolocation) {
@@ -598,5 +598,6 @@
     </script>
 </body>
 </html>
+
 
 
